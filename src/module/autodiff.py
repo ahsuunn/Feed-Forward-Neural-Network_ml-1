@@ -19,6 +19,20 @@ class Tensor:
         else:
             return Tensor(x)
         
+    @staticmethod
+    def _unbroadcast(grad, original_shape):
+        """
+        Fungsi helper untuk balikin dimensi gradien ke shape aslinya kalau terjadi broadcasting dari numpy
+        """
+        while len(grad.shape) > len(original_shape):
+            grad = grad.sum(axis=0)
+
+        for i, dim in enumerate(original_shape):
+            if dim == 1:
+                grad = grad.sum(axis=i, keepdims=True)
+        
+        return grad
+        
     def zero_grad(self):
         self.grad = np.zeros_like(self.data, dtype=float)
 
@@ -30,8 +44,9 @@ class Tensor:
         out = Tensor(self.data + other.data, _children = (self,other), _op = "+")
 
         def _backward():
-            # implementasinya
-            pass
+            self.grad += Tensor._unbroadcast(out.grad, self.data.shape)
+            other.grad += Tensor._unbroadcast(out.grad, other.data.shape)
+
         out._backward = _backward
         return out
     
@@ -43,8 +58,11 @@ class Tensor:
         out = Tensor(self.data * other.data, _children=(self,other), _op='*')
 
         def _backward():
-            # implementasinya
-            pass
+            grad_self_raw = other.data * out.grad
+            grad_other_raw = self.data * out.grad
+
+            self.grad += Tensor._unbroadcast(grad_self_raw, self.data.shape)
+            other.grad += Tensor._unbroadcast(grad_other_raw, other.data.shape)
 
         out._backward = _backward
         return out
@@ -58,8 +76,8 @@ class Tensor:
         out = Tensor(self.data ** exponent, _children=(self,), _op=f"**{exponent}")
 
         def _backward():
-            # implementasinya
-            pass
+            # turunan eksponen -> d(x^n)/dx = n * x^(n-1)
+            self.grad += (exponent * (self.data ** (exponent-1))) * out.grad
         
         out._backward = _backward
         return out
@@ -69,8 +87,10 @@ class Tensor:
         out = Tensor(self.data @ other.data, _children=(self, other), _op="@")
 
         def _backward():
-            # implementasi nanti
-            pass
+            # turunan dari matrix multiplier menggunakan transpose .T
+            # kalau C = A @ B -> dL/dA = dL/dC @ B.T -> dL/dB = A.T @ dL/dC
+            self.grad += out.grad @ other.data.T
+            other.grad += self.data.T @ out.grad
 
         out._backward = _backward
         return out
@@ -84,8 +104,9 @@ class Tensor:
         out = Tensor(np.dot(self.data, other.data), _children=(self, other), _op="dot")
 
         def _backward():
-            # implementasi nnti
-            pass
+            # turunan dot sama dgn matmul, tp pake np.dot agar konsisten dgn forward pass
+            self.grad += np.dot(out.grad, other.data.T)
+            other.grad += np.dot(self.data.T, out.grad)
 
         out._backward = _backward
         return out
@@ -94,8 +115,8 @@ class Tensor:
         out = Tensor(np.exp(self.data), _children=(self,), _op="exp")
 
         def _backward():
-            #implementasi
-            pass
+            # turunan eksponen -> eksponen itu sendiri
+            self.grad += out.data * out.grad
 
         out._backward = _backward
         return out
@@ -104,8 +125,8 @@ class Tensor:
         out = Tensor(np.log(self.data), _children=(self,), _op="log")
 
         def _backward():
-            #implemetnasi
-            pass
+            # turunan dari ln x -> 1/x
+            self.grad += (1.0/self.data) * out.grad
 
         out._backward = _backward
         return out
@@ -115,8 +136,12 @@ class Tensor:
         out = Tensor(np.sum(self.data, axis=axis, keepdims=keepdims), _children=(self,), _op="sum")
 
         def _backward():
-            #implementasi
-            pass
+            grad = out.grad
+            # kalau sum ngurangin dimensi, perlu dibalikin dimensinya agar bs di-broadcast ke bentuk data aslinya
+            if axis is not None and not keepdims:
+                grad = np.expand_dims(grad, axis=axis)
+            # turunan dari x1 + x2 + ... + xn -> 1 untuk setiap xi, jd pakai ones like
+            self.grad += grad * np.ones_like(self.data)
 
         out._backward = _backward
         return out
@@ -125,8 +150,8 @@ class Tensor:
         out = Tensor(np.maximum(0.0, self.data), _children=(self,), _op="relu")
 
         def _backward():
-            #implementasi
-            pass
+            # turunan ReLU -> 1 jika x > 0, dan 0 jika x <= 0
+            self.grad += (self.data > 0) * out.grad
 
         out._backward = _backward
         return out
