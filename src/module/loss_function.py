@@ -16,3 +16,19 @@ class LossFunction:
 
     def backward(self, y_true, y_pred):
         raise NotImplementedError
+    
+    def _mse_forward(self, y_true, y_pred):
+        return NotImplementedError
+    
+    def _mse_backward(self, y_true, y_pred):
+        return NotImplementedError
+    
+    def _binary_crossentropy_forward(self, y_true, y_pred):
+        return NotImplementedError
+    
+    def _binary_crossentropy_backward(self, y_true, y_pred):
+        return NotImplementedError
+    
+    def _categorical_crossentropy_forward(self, y_true, y_pred):
+        return NotImplementedError
+

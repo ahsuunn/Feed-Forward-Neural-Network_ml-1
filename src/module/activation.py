@@ -1,3 +1,5 @@
+import numpy as np
+
 class Activation:
     def __init__(self, activation_type):
         """
@@ -17,8 +19,38 @@ class Activation:
         """
         self.activation_type = activation_type
 
-    def forward(self, x):
+    def forward(self, x: np.ndarray) -> np.ndarray:
         raise NotImplementedError
 
-    def backward(self, x):
+    def backward(self, x: np.ndarray) -> np.ndarray:
         raise NotImplementedError
+    
+    def _linear_forward(self, x: np.ndarray) -> np.ndarray:
+        return NotImplementedError
+    
+    def _linear_backward(self, x: np.ndarray) -> np.ndarray:
+        return NotImplementedError
+    
+    def _relu_forward(self, x: np.ndarray) -> np.ndarray:
+        return NotImplementedError
+    
+    def _relu_backward(self, x: np.ndarray) -> np.ndarray:
+        return NotImplementedError
+    
+    def _sigmoid_forward(self, x: np.ndarray) -> np.ndarray:
+        return NotImplementedError
+    
+    def _sigmoid_backward(self, x: np.ndarray) -> np.ndarray:
+        return NotImplementedError
+    
+    def _tanh_forward(self, x: np.ndarray) -> np.ndarray:
+        return NotImplementedError
+    
+    def _tanh_backward(self, x: np.ndarray) -> np.ndarray:
+        return NotImplementedError
+    
+    def _softmax_forward(self, x: np.ndarray) -> np.ndarray:
+        return NotImplementedError
+    
+    def _softmax_backward(self, x: np.ndarray) -> np.ndarray:
+        return NotImplementedError
