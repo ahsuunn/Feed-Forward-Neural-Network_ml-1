@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class FeedForwardNeuralNetwork:
     def __init__(self, verbose=False, seed=None):
         self.layers = []
@@ -24,8 +25,7 @@ class FeedForwardNeuralNetwork:
         return x
 
     def backward(self, grad):
-        for layer in reversed(self.layers):
-            grad = layer.backward(grad)
+        pass
 
     def update(self, lambda_regularization=0.0):
         for layer in self.layers:
@@ -57,11 +57,10 @@ class FeedForwardNeuralNetwork:
 
                 # Compute loss
                 batch_loss = self.loss_function.forward(y_batch, y_pred)
-                epoch_loss += batch_loss * X_batch.shape[0]
+                epoch_loss += batch_loss.data * X_batch.shape[0]
 
                 # Backward pass
-                grad = self.loss_function.backward(y_batch, y_pred)
-                self.backward(grad)
+                batch_loss.backward()
 
                 # Update weights
                 self.update(lambda_regularization)

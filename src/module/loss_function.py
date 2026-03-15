@@ -1,33 +1,29 @@
 import numpy as np
+from src.module.autodiff import Tensor
 
 class LossFunction:
     def forward(self, y_true, y_pred):
         raise NotImplementedError
 
-    def backward(self, y_true, y_pred):
-        raise NotImplementedError
-
 class MSE(LossFunction):
     def forward(self, y_true, y_pred):
-        return np.mean(np.power(y_true - y_pred, 2))
-
-    def backward(self, y_true, y_pred):
-        return 2 * (y_pred - y_true) / y_pred.size
+        y_true = Tensor._to_tensor(y_true)
+        diff = y_pred + (-1.0 * y_true)
+        squared = diff ** 2.0
+        return squared.sum() * (1.0 / y_true.data.size)
 
 class BinaryCrossEntropy(LossFunction):
     def forward(self, y_true, y_pred):
-        y_pred = np.clip(y_pred, 1e-15, 1 - 1e-15)
-        return -np.mean(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
-
-    def backward(self, y_true, y_pred):
-        y_pred = np.clip(y_pred, 1e-15, 1 - 1e-15)
-        return -(y_true / y_pred) + ((1 - y_true) / (1 - y_pred)) / y_pred.shape[0]
+        y_true = Tensor._to_tensor(y_true)
+        eps = 1e-15
+        term1 = (y_pred + eps).log() * y_true
+        term2 = ((y_pred * -1.0) + (1.0 + eps)).log() * (1.0 + (-1.0 * y_true))
+        return (term1 + term2).sum() * (-1.0 / y_true.data.size)
 
 class CategoricalCrossEntropy(LossFunction):
     def forward(self, y_true, y_pred):
-        y_pred = np.clip(y_pred, 1e-15, 1 - 1e-15)
-        return -np.mean(np.sum(y_true * np.log(y_pred), axis=-1))
-
-    def backward(self, y_true, y_pred):
-        y_pred = np.clip(y_pred, 1e-15, 1 - 1e-15)
-        return -(y_true / y_pred) / y_pred.shape[0]
+        y_true = Tensor._to_tensor(y_true)
+        eps = 1e-15
+        batch_size = y_true.data.shape[0]
+        term = (y_pred + eps).log() * y_true
+        return term.sum() * (-1.0 / batch_size)

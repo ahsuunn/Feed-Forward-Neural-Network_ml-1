@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Tensor:
     def __init__(self, data, _children=(), _op="", label=""):
         self.data = np.array(data, dtype=float)
@@ -7,18 +8,18 @@ class Tensor:
         self._prev = set(_children)
         self._op = _op
         self.label = label
-        self._backward = lambda:None
+        self._backward = lambda: None
 
     def __repr__(self):
         return f"Tensor(data={self.data}, grad={self.grad}, and op='{self._op}')"
-    
+
     @staticmethod
     def _to_tensor(x):
         if isinstance(x, Tensor):
             return x
         else:
             return Tensor(x)
-        
+
     @staticmethod
     def _unbroadcast(grad, original_shape):
         """
@@ -30,18 +31,16 @@ class Tensor:
         for i, dim in enumerate(original_shape):
             if dim == 1:
                 grad = grad.sum(axis=i, keepdims=True)
-        
+
         return grad
-        
+
     def zero_grad(self):
         self.grad = np.zeros_like(self.data, dtype=float)
 
-    
     # Basic Operator Overload
-
     def __add__(self, other):
         other = Tensor._to_tensor(other)
-        out = Tensor(self.data + other.data, _children = (self,other), _op = "+")
+        out = Tensor(self.data + other.data, _children=(self, other), _op="+")
 
         def _backward():
             self.grad += Tensor._unbroadcast(out.grad, self.data.shape)
@@ -49,13 +48,13 @@ class Tensor:
 
         out._backward = _backward
         return out
-    
+
     def __radd__(self, other):
         return self + other
-    
+
     def __mul__(self, other):
         other = Tensor._to_tensor(other)
-        out = Tensor(self.data * other.data, _children=(self,other), _op='*')
+        out = Tensor(self.data * other.data, _children=(self, other), _op="*")
 
         def _backward():
             grad_self_raw = other.data * out.grad
@@ -66,22 +65,22 @@ class Tensor:
 
         out._backward = _backward
         return out
-    
+
     def __rmul__(self, other):
         return self * other
-    
+
     def __pow__(self, exponent):
-        if not isinstance(exponent, (int,float)):
+        if not isinstance(exponent, (int, float)):
             raise TypeError("Eksponen harus int atau float")
-        out = Tensor(self.data ** exponent, _children=(self,), _op=f"**{exponent}")
+        out = Tensor(self.data**exponent, _children=(self,), _op=f"**{exponent}")
 
         def _backward():
             # turunan eksponen -> d(x^n)/dx = n * x^(n-1)
-            self.grad += (exponent * (self.data ** (exponent-1))) * out.grad
-        
+            self.grad += (exponent * (self.data ** (exponent - 1))) * out.grad
+
         out._backward = _backward
         return out
-    
+
     def __matmul__(self, other):
         other = Tensor._to_tensor(other)
         out = Tensor(self.data @ other.data, _children=(self, other), _op="@")
@@ -94,12 +93,12 @@ class Tensor:
 
         out._backward = _backward
         return out
-    
-    def __rmatmul__(self,other):
+
+    def __rmatmul__(self, other):
         other = Tensor._to_tensor(other)
         return other.__matmul__(self)
-    
-    def dot(self,other):
+
+    def dot(self, other):
         other = Tensor._to_tensor(other)
         out = Tensor(np.dot(self.data, other.data), _children=(self, other), _op="dot")
 
@@ -110,7 +109,7 @@ class Tensor:
 
         out._backward = _backward
         return out
-    
+
     def exp(self):
         out = Tensor(np.exp(self.data), _children=(self,), _op="exp")
 
@@ -120,20 +119,23 @@ class Tensor:
 
         out._backward = _backward
         return out
-    
+
     def log(self):
         out = Tensor(np.log(self.data), _children=(self,), _op="log")
 
         def _backward():
             # turunan dari ln x -> 1/x
-            self.grad += (1.0/self.data) * out.grad
+            self.grad += (1.0 / self.data) * out.grad
 
         out._backward = _backward
         return out
-    
 
     def sum(self, axis=None, keepdims=False):
-        out = Tensor(np.sum(self.data, axis=axis, keepdims=keepdims), _children=(self,), _op="sum")
+        out = Tensor(
+            np.sum(self.data, axis=axis, keepdims=keepdims),
+            _children=(self,),
+            _op="sum",
+        )
 
         def _backward():
             grad = out.grad
@@ -145,7 +147,7 @@ class Tensor:
 
         out._backward = _backward
         return out
-    
+
     def relu(self):
         out = Tensor(np.maximum(0.0, self.data), _children=(self,), _op="relu")
 
@@ -155,13 +157,14 @@ class Tensor:
 
         out._backward = _backward
         return out
-    
 
     # Reverse backprop
     def backward(self, grad=None):
         if grad is None:
             if self.data.size != 1:
-                raise ValueError("grad harus ada buat output nonskalar, misal tensor dgn size > 1")
+                raise ValueError(
+                    "grad harus ada buat output nonskalar, misal tensor dgn size > 1"
+                )
             grad = np.ones_like(self.data, dtype=float)
         else:
             grad = np.array(grad, dtype=float)
