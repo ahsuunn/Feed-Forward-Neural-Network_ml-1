@@ -130,7 +130,7 @@ class FeedForwardNeuralNetwork:
         plt.show()
 
     def save(self, file_path):
-        pass
+        np.save(file_path, self.layers)
 
     def load(self, file_path):
-        pass
+        self.layers = np.load(file_path)
