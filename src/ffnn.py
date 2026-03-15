@@ -5,6 +5,7 @@ class FeedForwardNeuralNetwork:
     def __init__(self, verbose=False, seed=None):
         self.layers = []
         self.loss_function = None
+        self.optimizer = None
         self.verbose = verbose
         if seed is not None:
             np.random.seed(seed)
@@ -15,8 +16,9 @@ class FeedForwardNeuralNetwork:
     def add(self, layer):
         self.layers.append(layer)
 
-    def compile(self, loss_function):
+    def compile(self, loss_function, optimizer):
         self.loss_function = loss_function
+        self.optimizer = optimizer
 
     def forward(self, inputs):
         x = inputs
@@ -24,19 +26,13 @@ class FeedForwardNeuralNetwork:
             x = layer.forward(x)
         return x
 
-    def backward(self, grad):
-        pass
-
-    def update(self, lambda_regularization=0.0):
-        for layer in self.layers:
-            if hasattr(layer, "update"):
-                layer.update(lambda_regularization)
-
-    def fit(self, X, y, epochs, batch_size, lambda_regularization=0.0):
+    def fit(self, X, y, epochs, batch_size):
         if self.loss_function is None:
             raise ValueError(
                 "Model must be compiled with a loss function before fitting."
             )
+        if self.optimizer is None:
+            raise ValueError("Model must be compiled with an optimizer before fitting.")
 
         num_samples = X.shape[0]
 
@@ -62,8 +58,9 @@ class FeedForwardNeuralNetwork:
                 # Backward pass
                 batch_loss.backward()
 
-                # Update weights
-                self.update(lambda_regularization)
+                # Backend optimization
+                self.optimizer.step()
+                self.optimizer.zero_grad()
 
             epoch_loss /= num_samples
 

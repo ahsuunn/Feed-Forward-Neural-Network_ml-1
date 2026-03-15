@@ -3,8 +3,7 @@ from src.module.autodiff import Tensor
 
 
 class RMSNorm:
-    def __init__(self, size, learning_rate=0.01, eps=1e-8):
-        self.learning_rate = learning_rate
+    def __init__(self, size, eps=1e-8):
         self.eps = eps
         self.gamma = Tensor(np.ones((1, size)))
 
@@ -24,6 +23,5 @@ class RMSNorm:
 
         return (inputs * inv_rms) * self.gamma
 
-    def update(self, lambda_regularization=0.0):
-        self.gamma.data -= self.learning_rate * self.gamma.grad
-        self.gamma.zero_grad()
+    def get_parameters(self):
+        return [self.gamma]
