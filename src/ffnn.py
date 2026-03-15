@@ -1,4 +1,5 @@
 import numpy as np
+from tqdm import tqdm
 from .module.autodiff import Tensor
 import matplotlib.pyplot as plt
 
@@ -28,7 +29,7 @@ class FeedForwardNeuralNetwork:
             x = layer.forward(x)
         return x
 
-    def fit(self, X, y, epochs, batch_size):
+    def fit(self, X, y, epochs, batch_size, validation_data=None):
         if self.loss_function is None:
             raise ValueError(
                 "Model must be compiled with a loss function before fitting."
@@ -37,6 +38,10 @@ class FeedForwardNeuralNetwork:
             raise ValueError("Model must be compiled with an optimizer before fitting.")
 
         num_samples = X.shape[0]
+        num_batches = int(np.ceil(num_samples / batch_size))
+
+        # History tracker
+        history = {"loss": [], "val_loss": []} if validation_data else {"loss": []}
 
         for epoch in range(epochs):
             # Shuffle data
@@ -46,9 +51,18 @@ class FeedForwardNeuralNetwork:
 
             epoch_loss = 0
 
-            for i in range(0, num_samples, batch_size):
-                X_batch = X_shuffled[i : i + batch_size]
-                y_batch = y_shuffled[i : i + batch_size]
+            # Setup tqdm
+            batch_iterator = range(num_batches)
+            if self.verbose == True:
+                batch_iterator = tqdm(
+                    batch_iterator, desc=f"Epoch {epoch + 1}/{epochs}", unit="batch"
+                )
+
+            for i in batch_iterator:
+                start_idx = i * batch_size
+                end_idx = min(start_idx + batch_size, num_samples)
+                X_batch = X_shuffled[start_idx:end_idx]
+                y_batch = y_shuffled[start_idx:end_idx]
 
                 # Forward pass
                 y_pred = self.forward(X_batch)
@@ -64,11 +78,29 @@ class FeedForwardNeuralNetwork:
                 self.optimizer.step()
                 self.optimizer.zero_grad()
 
-            epoch_loss /= num_samples
+                # Update tqdm
+                if self.verbose == True:
+                    batch_iterator.set_postfix(batch_loss=f"{batch_loss.data:.4f}")
 
-            if self.verbose:
-                if (epoch + 1) % max(1, epochs // 10) == 0 or epoch == 0:
-                    print(f"Epoch {epoch + 1}/{epochs} - Loss: {epoch_loss:.6f}")
+            epoch_loss /= num_samples
+            history["loss"].append(epoch_loss)
+
+            # Validation calculation
+            if validation_data is not None:
+                X_val, y_val = validation_data
+                val_pred = self.forward(X_val)
+                v_loss = self.loss_function.forward(y_val, val_pred)
+                history["val_loss"].append(v_loss.data)
+
+                if self.verbose == True:
+                    batch_iterator.set_postfix(
+                        loss=f"{epoch_loss:.4f}", val_loss=f"{v_loss.data:.4f}"
+                    )
+            else:
+                if self.verbose == True:
+                    batch_iterator.set_postfix(loss=f"{epoch_loss:.4f}")
+
+        return history
 
     def predict(self, X):
         return self.forward(X)
