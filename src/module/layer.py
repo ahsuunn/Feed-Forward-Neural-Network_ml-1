@@ -1,6 +1,7 @@
 import numpy as np
 from src.module.autodiff import Tensor
 
+
 class Layer:
     def __init__(
         self,
@@ -23,14 +24,19 @@ class Layer:
             w = np.random.uniform(-0.5, 0.5, (input_size, output_size))
         elif self.initialization_type == "random_normal":
             w = np.random.randn(input_size, output_size)
+
+        # Bonus
         elif self.initialization_type == "he":
             w = np.random.randn(input_size, output_size) * np.sqrt(2.0 / input_size)
+        elif self.initialization_type == "xavier":
+            w = np.random.randn(input_size, output_size) * np.sqrt(1.0 / input_size)
+
         else:
             w = np.random.randn(input_size, output_size)
 
         self.weights = Tensor(w)
         self.bias = Tensor(np.zeros((1, output_size)))
-        
+
         self.inputs = None
 
     def forward(self, inputs):
@@ -46,7 +52,7 @@ class Layer:
             self.weights.data -= self.learning_rate * (self.weights.grad + l2_penalty)
         else:
             self.weights.data -= self.learning_rate * self.weights.grad
-            
+
         self.bias.data -= self.learning_rate * self.bias.grad
 
         self.weights.zero_grad()
