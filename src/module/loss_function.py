@@ -1,5 +1,5 @@
 import numpy as np
-from src.module.autodiff import Tensor
+from module.autodiff import Tensor
 
 class LossFunction:
     def forward(self, y_true, y_pred):

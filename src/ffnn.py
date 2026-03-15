@@ -1,6 +1,6 @@
 import numpy as np
 from tqdm import tqdm
-from .module.autodiff import Tensor
+from module.autodiff import Tensor
 import matplotlib.pyplot as plt
 
 
@@ -122,11 +122,10 @@ class FeedForwardNeuralNetwork:
         if not isinstance(param, Tensor):
             raise ValueError("Layer parameters are not tensors")
 
-        data = param.data
-        if data.ndim != 2:
-            raise ValueError("Layer parameters are not 2D tensors")
-
-        data = data.flatten()
+        data = np.asarray(param.data).ravel()
+        data = data[np.isfinite(data)]
+        if data.size == 0:
+            raise ValueError("No finite weight values to plot")
         plt.hist(data, bins=num_bins)
         plt.title(f"Weight distribution for layer {layer_idx}")
         plt.xlabel("Weight")
@@ -150,11 +149,10 @@ class FeedForwardNeuralNetwork:
         if not isinstance(param, Tensor):
             raise ValueError("Layer parameters are not tensors")
 
-        data = param.grad
-        if data.ndim != 2:
-            raise ValueError("Layer parameters are not 2D tensors")
-
-        data = data.flatten()
+        data = np.asarray(param.grad).ravel()
+        data = data[np.isfinite(data)]
+        if data.size == 0:
+            raise ValueError("No finite gradient values to plot")
         plt.hist(data, bins=num_bins)
         plt.title(f"Gradient weight distribution for layer {layer_idx}")
         plt.xlabel("Gradient weight")

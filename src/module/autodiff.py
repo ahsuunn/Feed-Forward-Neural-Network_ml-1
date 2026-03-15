@@ -11,7 +11,7 @@ class Tensor:
         self._backward = lambda: None
 
     def __repr__(self):
-        return f"Tensor(data={self.data}, grad={self.grad}, and op='{self._op}')"
+        return f"Tensor(data={self.data}, grad={self.grad}, op='{self._op}')"
 
     @staticmethod
     def _to_tensor(x):
@@ -51,6 +51,9 @@ class Tensor:
 
     def __radd__(self, other):
         return self + other
+
+    def __neg__(self):
+        return self * -1.0
 
     def __mul__(self, other):
         other = Tensor._to_tensor(other)
