@@ -29,6 +29,8 @@ for layer in model1.layers:
 
 model1.compile(CategoricalCrossEntropy(), optimizer=Adam(params1, learning_rate=0.01))
 model1.fit(X, y, epochs=15, batch_size=10)
+model1.plot_weight_distribution(0)
+model1.plot_gradient_weight_distribution(0)
 
 print("With RMSNorm")
 model2 = FeedForwardNeuralNetwork(verbose=True, seed=42)

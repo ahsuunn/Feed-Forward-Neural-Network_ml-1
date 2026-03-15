@@ -1,4 +1,6 @@
 import numpy as np
+from .module.autodiff import Tensor
+import matplotlib.pyplot as plt
 
 
 class FeedForwardNeuralNetwork:
@@ -72,10 +74,60 @@ class FeedForwardNeuralNetwork:
         return self.forward(X)
 
     def plot_weight_distribution(self, layer_idx, num_bins=50):
-        pass
+        if layer_idx < 0 or layer_idx >= len(self.layers):
+            raise ValueError("Invalid layer index")
+
+        layer = self.layers[layer_idx]
+
+        if not hasattr(layer, "get_parameters"):
+            raise ValueError("Layer does not have parameters")
+
+        params = layer.get_parameters()
+        if len(params) == 0:
+            raise ValueError("Layer has no parameters")
+
+        param = params[0]
+        if not isinstance(param, Tensor):
+            raise ValueError("Layer parameters are not tensors")
+
+        data = param.data
+        if data.ndim != 2:
+            raise ValueError("Layer parameters are not 2D tensors")
+
+        data = data.flatten()
+        plt.hist(data, bins=num_bins)
+        plt.title(f"Weight distribution for layer {layer_idx}")
+        plt.xlabel("Weight")
+        plt.ylabel("Frequency")
+        plt.show()
 
     def plot_gradient_weight_distribution(self, layer_idx, num_bins=50):
-        pass
+        if layer_idx < 0 or layer_idx >= len(self.layers):
+            raise ValueError("Invalid layer index")
+
+        layer = self.layers[layer_idx]
+
+        if not hasattr(layer, "get_parameters"):
+            raise ValueError("Layer does not have parameters")
+
+        params = layer.get_parameters()
+        if len(params) == 0:
+            raise ValueError("Layer has no parameters")
+
+        param = params[0]
+        if not isinstance(param, Tensor):
+            raise ValueError("Layer parameters are not tensors")
+
+        data = param.grad
+        if data.ndim != 2:
+            raise ValueError("Layer parameters are not 2D tensors")
+
+        data = data.flatten()
+        plt.hist(data, bins=num_bins)
+        plt.title(f"Gradient weight distribution for layer {layer_idx}")
+        plt.xlabel("Gradient weight")
+        plt.ylabel("Frequency")
+        plt.show()
 
     def save(self, file_path):
         pass
