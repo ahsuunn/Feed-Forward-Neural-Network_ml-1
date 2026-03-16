@@ -105,7 +105,7 @@ class FeedForwardNeuralNetwork:
     def predict(self, X):
         return self.forward(X)
 
-    def plot_weight_distribution(self, layer_idx, num_bins=50):
+    def plot_distributions(self, layer_idx, num_bins=50):
         if layer_idx < 0 or layer_idx >= len(self.layers):
             raise ValueError("Invalid layer index")
 
@@ -122,41 +122,31 @@ class FeedForwardNeuralNetwork:
         if not isinstance(param, Tensor):
             raise ValueError("Layer parameters are not tensors")
 
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+        # Weight distribution
         data = np.asarray(param.data).ravel()
         data = data[np.isfinite(data)]
-        if data.size == 0:
-            raise ValueError("No finite weight values to plot")
-        plt.hist(data, bins=num_bins)
-        plt.title(f"Weight distribution for layer {layer_idx}")
-        plt.xlabel("Weight")
-        plt.ylabel("Frequency")
-        plt.show()
+        if data.size > 0:
+            ax1.hist(data, bins=num_bins)
+            ax1.set_title(f"Weight distribution (Layer {layer_idx})")
+            ax1.set_xlabel("Weight")
+            ax1.set_ylabel("Frequency")
+        else:
+            ax1.set_title(f"Weight distribution (Layer {layer_idx}) - No data")
 
-    def plot_gradient_weight_distribution(self, layer_idx, num_bins=50):
-        if layer_idx < 0 or layer_idx >= len(self.layers):
-            raise ValueError("Invalid layer index")
+        # Gradient distribution
+        grad_data = np.asarray(param.grad).ravel()
+        grad_data = grad_data[np.isfinite(grad_data)]
+        if grad_data.size > 0:
+            ax2.hist(grad_data, bins=num_bins)
+            ax2.set_title(f"Gradient distribution (Layer {layer_idx})")
+            ax2.set_xlabel("Gradient")
+            ax2.set_ylabel("Frequency")
+        else:
+            ax2.set_title(f"Gradient distribution (Layer {layer_idx}) - No data")
 
-        layer = self.layers[layer_idx]
-
-        if not hasattr(layer, "get_parameters"):
-            raise ValueError("Layer does not have parameters")
-
-        params = layer.get_parameters()
-        if len(params) == 0:
-            raise ValueError("Layer has no parameters")
-
-        param = params[0]
-        if not isinstance(param, Tensor):
-            raise ValueError("Layer parameters are not tensors")
-
-        data = np.asarray(param.grad).ravel()
-        data = data[np.isfinite(data)]
-        if data.size == 0:
-            raise ValueError("No finite gradient values to plot")
-        plt.hist(data, bins=num_bins)
-        plt.title(f"Gradient weight distribution for layer {layer_idx}")
-        plt.xlabel("Gradient weight")
-        plt.ylabel("Frequency")
+        plt.tight_layout()
         plt.show()
 
     def save(self, file_path):
