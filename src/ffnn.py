@@ -74,6 +74,10 @@ class FeedForwardNeuralNetwork:
                 # Backward pass
                 batch_loss.backward()
 
+                # Snapshot gradients
+                for p in self.optimizer.parameters:
+                    p.saved_grad = p.grad.copy()
+
                 # Backend optimization
                 self.optimizer.step()
                 self.optimizer.zero_grad()
@@ -105,7 +109,7 @@ class FeedForwardNeuralNetwork:
     def predict(self, X):
         return self.forward(X)
 
-    def plot_distributions(self, layer_idx, num_bins=50):
+    def get_layer_parameter(self, layer_idx):
         if layer_idx < 0 or layer_idx >= len(self.layers):
             raise ValueError("Invalid layer index")
 
@@ -122,29 +126,84 @@ class FeedForwardNeuralNetwork:
         if not isinstance(param, Tensor):
             raise ValueError("Layer parameters are not tensors")
 
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+        return param
 
-        # Weight distribution
-        data = np.asarray(param.data).ravel()
+    def _plot_histogram(self, ax, data, num_bins, title, xlabel):
+        data = np.asarray(data).ravel()
         data = data[np.isfinite(data)]
         if data.size > 0:
-            ax1.hist(data, bins=num_bins)
-            ax1.set_title(f"Weight distribution (Layer {layer_idx})")
-            ax1.set_xlabel("Weight")
-            ax1.set_ylabel("Frequency")
+            ax.hist(data, bins=num_bins)
+            ax.set_title(title)
+            ax.set_xlabel(xlabel)
+            ax.set_ylabel("Frequency")
         else:
-            ax1.set_title(f"Weight distribution (Layer {layer_idx}) - No data")
+            ax.set_title(f"{title} - No data")
 
-        # Gradient distribution
-        grad_data = np.asarray(param.grad).ravel()
-        grad_data = grad_data[np.isfinite(grad_data)]
-        if grad_data.size > 0:
-            ax2.hist(grad_data, bins=num_bins)
-            ax2.set_title(f"Gradient distribution (Layer {layer_idx})")
-            ax2.set_xlabel("Gradient")
-            ax2.set_ylabel("Frequency")
+    def _get_plottable_layers(self, layer_indices=None):
+        if layer_indices is not None:
+            idxs = layer_indices
         else:
-            ax2.set_title(f"Gradient distribution (Layer {layer_idx}) - No data")
+            idxs = range(len(self.layers))
+
+        result = []
+        for i in idxs:
+            if i < 0 or i >= len(self.layers):
+                raise ValueError(f"Invalid layer index: {i}")
+            layer = self.layers[i]
+            if hasattr(layer, "get_parameters"):
+                params = layer.get_parameters()
+                if params and isinstance(params[0], Tensor):
+                    result.append((i, layer))
+        return result
+
+    def plot_weight_distributions(self, layer_indices=None, num_bins=50):
+        plottable = self._get_plottable_layers(layer_indices)
+        if not plottable:
+            print("No plottable layers found.")
+            return
+
+        n = len(plottable)
+        fig, axes = plt.subplots(1, n, figsize=(6 * n, 5))
+        if n == 1:
+            axes = [axes]
+
+        for ax, (idx, layer) in zip(axes, plottable):
+            param = layer.get_parameters()[0]
+            self._plot_histogram(
+                ax, param.data, num_bins, f"Weight distribution (Layer {idx})", "Weight"
+            )
+
+        plt.tight_layout()
+        plt.show()
+
+    def plot_gradient_distributions(self, layer_indices=None, num_bins=50):
+        plottable = self._get_plottable_layers(layer_indices)
+
+        # filter saved_grad
+        filtered = []
+        for idx, layer in plottable:
+            for param in layer.get_parameters():
+                if isinstance(param, Tensor) and param.saved_grad is not None:
+                    filtered.append((idx, param))
+                    break
+
+        if not filtered:
+            print("No plottable layers with gradients found.")
+            return
+
+        n = len(filtered)
+        fig, axes = plt.subplots(1, n, figsize=(6 * n, 5))
+        if n == 1:
+            axes = [axes]
+
+        for ax, (idx, param) in zip(axes, filtered):
+            self._plot_histogram(
+                ax,
+                param.saved_grad,
+                num_bins,
+                f"Gradient distribution (Layer {idx})",
+                "Gradient",
+            )
 
         plt.tight_layout()
         plt.show()

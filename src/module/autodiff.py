@@ -5,6 +5,7 @@ class Tensor:
     def __init__(self, data, _children=(), _op="", label=""):
         self.data = np.array(data, dtype=float)
         self.grad = np.zeros_like(self.data, dtype=float)
+        self.saved_grad = None
         self._prev = set(_children)
         self._op = _op
         self.label = label
