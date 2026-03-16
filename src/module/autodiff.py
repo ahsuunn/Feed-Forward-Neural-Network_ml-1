@@ -10,6 +10,19 @@ class Tensor:
         self.label = label
         self._backward = lambda: None
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        if "_backward" in state:
+            del state["_backward"]
+        if "_prev" in state:
+            del state["_prev"]
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._prev = set()
+        self._backward = lambda: None
+
     def __repr__(self):
         return f"Tensor(data={self.data}, grad={self.grad}, op='{self._op}')"
 
@@ -51,6 +64,12 @@ class Tensor:
 
     def __radd__(self, other):
         return self + other
+
+    def __sub__(self, other):
+        return self + (-other)
+
+    def __rsub__(self, other):
+        return other + (-self)
 
     def __neg__(self):
         return self * -1.0
@@ -133,7 +152,7 @@ class Tensor:
         out._backward = _backward
         return out
 
-    def sum(self, axis=None, keepdims=False):
+    def sum(self, axis=None, keepdims=False, **kwargs):
         out = Tensor(
             np.sum(self.data, axis=axis, keepdims=keepdims),
             _children=(self,),

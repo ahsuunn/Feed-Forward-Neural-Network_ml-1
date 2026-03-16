@@ -153,4 +153,4 @@ class FeedForwardNeuralNetwork:
         np.save(file_path, self.layers)
 
     def load(self, file_path):
-        self.layers = np.load(file_path)
+        self.layers = np.load(file_path, allow_pickle=True)

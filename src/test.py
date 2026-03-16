@@ -1,12 +1,17 @@
+import os
 import sys
+
+# Ensure the 'src' directory is in the Python path so we can import modules correctly
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 import numpy as np
 
-from .ffnn import FeedForwardNeuralNetwork
-from .module.layer import Layer
-from .module.normalization import RMSNorm
-from .module.activation import ReLU, Softmax
-from .module.loss_function import CategoricalCrossEntropy
-from .module.optimizer import Adam, SGD
+from ffnn import FeedForwardNeuralNetwork
+from module.layer import Layer
+from module.normalization import RMSNorm
+from module.activation import ReLU, Softmax
+from module.loss_function import CategoricalCrossEntropy
+from module.optimizer import Adam, SGD
 
 # Create dummy data
 np.random.seed(42)
@@ -47,3 +52,13 @@ for layer in model2.layers:
 
 model2.compile(CategoricalCrossEntropy(), optimizer=Adam(params2, learning_rate=0.01))
 model2.fit(X, y, epochs=15, batch_size=10)
+
+model2.save("test_model.npy")
+
+model3 = FeedForwardNeuralNetwork(verbose=True, seed=42)
+model3.load("test_model.npy")
+
+predictions2 = model2.predict(X)
+predictions3 = model3.predict(X)
+print("Loaded model prediction sum:", np.sum(predictions3.data))
+print("Original model prediction sum:", np.sum(predictions2.data))
