@@ -48,7 +48,7 @@ Proyek ini menggunakan **Python ≥ 3.13** dan dikelola dengan [`uv`](https://gi
 ### 1. Clone repository
 
 ```bash
-git clone <url-repository>
+git clone https://github.com/ahsuunn/Feed-Forward-Neural-Network_ml-1.git
 cd Feed-Forward-Neural-Network_ml-1
 ```
 
@@ -136,8 +136,8 @@ model.plot_gradient_distributions()
 
 | NIM        | Nama           | Tugas                                                                                                                                       |
 | ---------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `13523113` | Nama Anggota 1 | `autodiff.py` — Automatic Differentiation Engine (kelas `Tensor`, operasi forward & backward)                                               |
-| `13523074` | Nama Anggota 2 | `layer.py`, `normalization.py`, `activation.py` — Dense Layer, RMSNorm, inisialisasi bobot, fungsi aktivasi                                 |
-| `13622076` | Nama Anggota 3 | `loss_function.py`, `optimizer.py`, `ffnn.py` — Fungsi loss, Optimizer (SGD, Adam), kelas utama FFNN, training loop, visualisasi, save/load |
+| `13523113` | Kefas Kurnia Jonathan | `autodiff.py` — Automatic Differentiation Engine (kelas `Tensor`, operasi forward & backward)                                               |
+| `13523074` | Ahsan Malik Al Farisi | `layer.py`, `normalization.py`, `activation.py` — Dense Layer, RMSNorm, inisialisasi bobot, fungsi aktivasi                                 |
+| `13622076` | Ziyan Agil Nur Ramadhan | `loss_function.py`, `optimizer.py`, `ffnn.py` — Fungsi loss, Optimizer (SGD, Adam), kelas utama FFNN, training loop, visualisasi, save/load |
 
 ---
